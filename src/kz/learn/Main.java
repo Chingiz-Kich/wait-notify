@@ -49,9 +49,19 @@ public class Main {
 class WaitNotify {
 
     private Scanner scanner = new Scanner(System.in);
+    private final Object lock = new Object();
 
     public void produce() throws InterruptedException {
-        synchronized (this) {
+
+        /**
+         * Вызов wait() & notify() не привязаны к объектам на которых идет синхронизация
+         * Вызов этих методов привязывается к тому контексту, где мы находимся
+         * Пример: мы синхронизируемся на lock объекте, но пока мы явно не вызовем у lock объекта lock.wait()
+         * синхронизация будет идти на this.wait()
+         * Java выкинет тут ошибку IllegalMonitorStateException: current thread is not owner
+         * Потому что надо синхронизироватьсяна том же объекте на котором вызывается метод wait() or notify()
+         */
+        synchronized (lock) {
             System.out.println("Program was started");
 
             /**
@@ -59,7 +69,7 @@ class WaitNotify {
              * 1. Отдаем intrinsic lock (монитор)
              * 2. Ждем пока будет вызван notify()
              */
-            wait();
+            this.wait();
             System.out.println("Program was ended");
         }
     }
@@ -79,5 +89,6 @@ class WaitNotify {
              */
             Thread.sleep(5000);
         }
+        System.out.println("Block for notify ended");
     }
 }
